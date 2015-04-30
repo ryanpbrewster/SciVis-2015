@@ -1,1 +1,7 @@
 data
+
+*.aux
+*.log
+*.bbl
+*.blg
+writeup.pdf

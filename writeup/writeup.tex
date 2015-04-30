@@ -1,0 +1,91 @@
+\documentclass[12pt]{article}
+\usepackage{fullpage}
+\usepackage{amsmath, amssymb}
+\usepackage{setspace}
+\usepackage{graphicx}
+\usepackage{enumerate}
+\usepackage{times}
+
+\newcommand{\eps}{\epsilon}
+\newcommand{\kap}{\kappa}
+\newcommand{\lam}{\lambda}
+\newcommand{\del}{\nabla}
+
+\renewcommand{\vec}[1]{\mathbf{#1}}
+\newcommand{\mat}[1]{\mathbf{#1}}
+
+\newcommand{\pp}[2]{\frac{\partial #1}{\partial #2}}
+
+\title{Visualization of Angular Momentum Equilibration during Halo Mergers}
+\author{Ryan Brewster \\ Peishi Jiang}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+
+The energy and matter distribution in the modern universe displays a lot of
+very complex structure. It is not well understood exactly how that distribution
+evolved. The use of cosmological simulations can help shed light on the
+formation of galaxies and other structures. In this context, large collections
+of mass are called halos. The main goal of these simulations is to investigate
+the formation of small halos and the process by which they merge together to
+form the large, complex web of halos observed (or inferred) in the physical
+universe.
+
+The Dark Sky simulations  involve a large number of collisionless particles
+interacting gravitationally. Though extensive optimizations are necessary due
+to the scale of the simulations (over $10^{12}$ particles for the largest data
+set), the underlying physical processes are very straightforward.
+
+The computer program used to perform the Dark Sky simulations uses an adaptive
+symplectic integrator to propagate the equations of motion for the system. It
+also employs several approximations (none of which introduce significant
+error), the most significant of which is a spatial tree data structure to make
+it possible to approximate gravitational interaction between large collections
+of particles.
+
+The initial output of the simulation (henceforth called ``Level 1'' data) is
+a series of timestep datasets, each of which contains the list of particle
+positions and velocities at that timestep. Analysis of that data was performed,
+yielding Level 2 data consisting of a list of halos for each timestep. These
+halos were identified using the ROCKSTAR algorithm (which finds clusters of
+particles in 6-dimensions space, 3 positional dimensions and 3 velocity
+dimensions). ROCKSTAR itself stands for Robust Overdensity Calculation using
+K-Space Topologically Adaptive Refinement. This algorithm has been extensively
+optimized to provide both very accurate, robust identification of halos and
+extremely high performance and parallelization capabilities. Finally, analysis
+of the Level 2 data yielded Level 3 data consisting of a merger tree of halos
+over time. This merger tree can identify how halos form, merge together, and
+separate over time.
+
+Our goal for this visualization project is to find a way to display useful
+information during the merging of several small halos into a larger halo. To do
+this, we will specify a sequence of timesteps where several halos (at least
+two) merge together to form a single halo; this should be possible using the
+provided merger tree database. We will then identify all of the particles
+involved in this process using the halo database. For each timestep in the
+specified time step sequence, we will display every particle involved in the
+halo merging. The particles will be colored by a function of their individual
+properties (position, velocity) and their collective properties (angular
+momentum, proximity from halo center, etc.).
+
+We hypothesize that over the course of time, the distinct halos --- each of
+which can be identified by the similar color of its constituent particles ---
+will merge together and the particle colors will also quickly equilibrate to
+form a homogeneous mix. If this is the case, it should be possible to identify
+a time constant for this equilibration process. With the large number of halo
+mergers that occur during the Dark Sky simulations, it may even be possible to
+find a way to estimate the time constant from other parameters from the small
+halos.
+
+\section{Theory}
+
+\section{Results}
+
+\bibliography{writeup.bib}
+\bibliographystyle{plain}
+\nocite{*}
+
+\end{document}
