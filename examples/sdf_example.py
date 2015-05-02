@@ -5,7 +5,7 @@ The Example is from http://darksky.slac.stanford.edu/scivis2015/examples.html
 from sdfpy import load_sdf
 from thingking import loadtxt
 
-prefix = "../data"
+prefix = "../data/"
 # Load N-body particles from a = 1.0 dataset. Particles have positions with
 # units of proper kpc, and velocities with units of km/s. 
 particles = load_sdf(prefix+"ds14_scivis_0128_e4_dt04_1.0000")
