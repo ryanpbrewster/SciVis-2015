@@ -80,7 +80,84 @@ mergers that occur during the Dark Sky simulations, it may even be possible to
 find a way to estimate the time constant from other parameters from the small
 halos.
 
-\section{Theory}
+
+\section{Data Preprocessing}
+
+In this contest, three types of data are provided for the halo identification 
+and analysis. The first is the raw particle data, which describes the state (e.g.,
+position of the particle, velocity of the particle, acceleration and so forth).
+The format of the file is SDF, including two parts (i.e., the layout of the data 
+(ASCII header) and the binary data). The second type of the data is Hala catalog,
+describing the states of halos at each snapshot time, written in plain text file. 
+And the final dataset type is Merger Tree database, including the information of 
+merger tree which "links the individual halo catalogs that each represents a snapshot 
+in time". 
+
+To identify the halos in each time step and investigate how the particles evolves to 
+halos with time, it is crucial to conduct relevant numerical analysis on both raw 
+particle datasets and information of halo and merger tree. Therefore, the unit conversion 
+among the three data types is necessary. A short summary on the main elements in the 
+raw particle datasets and halo catalog & merger tree is provided in Table 1.
+
+\begin{table}[h]
+\caption {Units of main elements in the three data types} \label{tab:title} 
+\begin{tabular}{|c|c|c|c}
+ {\bf element} & {\bf unit} & {\bf element} & {\bf unit}  \\
+ length & kpc & Halo position & Mpc/h (comoving)   \\
+ velocity & kpc/Gyr & Halo velocity & km/s (physical)  \\
+ mass & 1e10 Msun  & Halo angular momenta & (Msun/h) * (Mpc/h) * km/s (physical)  \\
+ time & Gyr &  &  
+\end{tabular}
+\end{table}
+
+
+\section{Data Analysis}
+The objective of this visualization project is to simulate how two halos evolve with 
+time and are combined with each other finally. Therefore, we need to tackle and present
+the following issues: (1) identifying its belonging particles given a halo at each time 
+step; (2) visualizing the magnitude of the angular momentum of each belonging particle 
+in a specific halo; (3) animating the combination process of two halos over time;
+(4) analyzing the change of particle angular momentum spectrum of two halos over time.
+
+\subsection{The angular momentums of the particles from a specific halo}
+The position information of particles (from the raw particle file) and halos (from the 
+merger tree file \"hlist_*\") at each time step are utilized to find the belonging particles
+in a given halo. Nevertheless, due to the different data generating systems, it is necessary 
+to conduct a conversion of both units and coordinates between the raw data file and 
+\"hlist_*\" file. A conversion function is thus created to perform the unit scaling and
+coordinate shifting as follows:
+
+\begin{equation}
+f(\vec{r}) = a \vec{r} + \vec{b}
+\end{equation}
+
+where $f$ is the conversion function; $\vec{r}$ is the coordinates of the halos; 
+$a$ is the unit conversion coefficient between the raw particle and the halo and 
+$\vec{b}$ is the relative position of the halo coordinates with regard to the particle
+coordinates
+
+Moreover, we roughly define that the particle which is within a certain value from 
+the center of a halo is a belonging particle of that halo. The certain value is chosen as 
+the ratio of the halo radius and the scale radius. In addition, the angular momentum of 
+a particle in its halo is given by the product of the relative position of the particle
+in its halo and the relative linear momentum between the particle and the halo, which 
+are expressed as follows
+
+\begin{equation}
+\vec{L} = (\vec{r_1} - \vec{r_h}) \times (\vec{p_1} - \vec{p_h}}
+\end{equation}
+
+where $\vec{L}$ is the angular momentum of a particle; $\vec{r_1}$ and $\vec{r_h}$ are
+the positions of the particle and the halo, respectively and $\vec{p_1}$ and $\vec{p_h}$ 
+are the linear momentums of the particle and the halo, respectively.
+
+Finally, VTK is used for the visualization of the particles of a specific halo at each 
+time step through volume rendering. The magnitudes of the angular momentums of all the 
+particles in the halo are colored to provide a general insight of how the particles move 
+inside the halo.
+
+\subsection{The evolving of two combined halos}
+
 
 \section{Results}
 
