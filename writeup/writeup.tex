@@ -5,11 +5,13 @@
 \usepackage{graphicx}
 \usepackage{enumerate}
 \usepackage{times}
+\usepackage{multirow}
 
 \newcommand{\eps}{\epsilon}
 \newcommand{\kap}{\kappa}
 \newcommand{\lam}{\lambda}
 \newcommand{\del}{\nabla}
+\newcommand{\Msun}{\ensuremath{M_\odot}}
 
 \renewcommand{\vec}[1]{\mathbf{#1}}
 \newcommand{\mat}[1]{\mathbf{#1}}
@@ -57,8 +59,8 @@ K-Space Topologically Adaptive Refinement. This algorithm has been extensively
 optimized to provide both very accurate, robust identification of halos and
 extremely high performance and parallelization capabilities. Finally, analysis
 of the Level 2 data yielded Level 3 data consisting of a merger tree of halos
-over time. This merger tree can identify how halos form, merge together, and
-separate over time.
+over time. This merger tree can help identify how halos form, merge together,
+and separate over time.
 
 Our goal for this visualization project is to find a way to display useful
 information during the merging of several small halos into a larger halo. To do
@@ -82,32 +84,37 @@ halos.
 
 
 \section{Data Preprocessing}
-
-In this contest, three types of data are provided for the halo identification 
-and analysis. The first is the raw particle data, which describes the state (e.g.,
-position of the particle, velocity of the particle, acceleration and so forth).
-The format of the file is SDF, including two parts (i.e., the layout of the data 
-(ASCII header) and the binary data). The second type of the data is Hala catalog,
-describing the states of halos at each snapshot time, written in plain text file. 
-And the final dataset type is Merger Tree database, including the information of 
-merger tree which "links the individual halo catalogs that each represents a snapshot 
-in time". 
+In this contest, three types of data are provided for the halo identification
+and analysis. The first is the raw particle data, which describes the state
+(e.g., position of the particle, velocity of the particle, acceleration and so
+forth).  The format of the file is SDF, including two parts (i.e., the layout
+of the data (ASCII header) and the binary data). The second type of the data is
+Hala catalog, describing the states of halos at each snapshot time, written in
+plain text file.  And the final dataset type is Merger Tree database, including
+the information of merger tree which ``links the individual halo catalogs that
+each represents a snapshot in time''.
 
 To identify the halos in each time step and investigate how the particles evolves to 
 halos with time, it is crucial to conduct relevant numerical analysis on both raw 
 particle datasets and information of halo and merger tree. Therefore, the unit conversion 
 among the three data types is necessary. A short summary on the main elements in the 
-raw particle datasets and halo catalog & merger tree is provided in Table 1.
+raw particle datasets and halo catalog and merger tree is provided in Table 1.
 
 \begin{table}[h]
-\caption {Units of main elements in the three data types} \label{tab:title} 
-\begin{tabular}{|c|c|c|c}
- {\bf element} & {\bf unit} & {\bf element} & {\bf unit}  \\
- length & kpc & Halo position & Mpc/h (comoving)   \\
- velocity & kpc/Gyr & Halo velocity & km/s (physical)  \\
- mass & 1e10 Msun  & Halo angular momenta & (Msun/h) * (Mpc/h) * km/s (physical)  \\
- time & Gyr &  &  
+\centering
+\begin{tabular}{rll}
+                          &  \textbf{Quantity} & \textbf{Unit} \\
+\hline
+\multirow{3}{*}{Particle\Huge\{} &  position          & kpc             \\
+                                 &  velocity          & kpc/Gyr         \\
+                                 &  mass              & $10^{10}$ \Msun \\
+\hline
+\multirow{3}{*}{Halo\Huge\{}     &  position          & Mpc/$h$ (comoving) \\
+                                 &  velocity          & km/s (physical)  \\
+                                 &  angular momentum  & $\Msun/h \cdot$ Mpc$/h \cdot$ km/s (physical)  \\
 \end{tabular}
+\caption {Units of main elements in the datasets}
+\label{tab:units}
 \end{table}
 
 
@@ -119,50 +126,76 @@ step; (2) visualizing the magnitude of the angular momentum of each belonging pa
 in a specific halo; (3) animating the combination process of two halos over time;
 (4) analyzing the change of particle angular momentum spectrum of two halos over time.
 
-\subsection{The angular momentums of the particles from a specific halo}
-The position information of particles (from the raw particle file) and halos (from the 
-merger tree file \"hlist_*\") at each time step are utilized to find the belonging particles
-in a given halo. Nevertheless, due to the different data generating systems, it is necessary 
-to conduct a conversion of both units and coordinates between the raw data file and 
-\"hlist_*\" file. A conversion function is thus created to perform the unit scaling and
-coordinate shifting as follows:
-
+\subsection{Identifying a Halo's Constituent Particles}
+The position information of particles (from the raw particle files
+\verb@ds14_scivis_0128_e4_dt04_*@) and halos (from the halo list files
+\verb@hlist_*@) at each time step are utilized to find the particles that make
+up a given halo. Our process is as follows: first, choose a specific halo; this
+can be done arbitrarily, or by identifying halos that have a desired property.
+Next, we perform a coordinate transformation on the halo location, taking it
+from the system used by the Rockstar algorithm to the system used by the
+Darksky simulations (see Table \ref{tab:units} for the units used). This
+transformation is a linear mapping of the form
 \begin{equation}
-f(\vec{r}) = a \vec{r} + \vec{b}
+f(\vec{r}) = \frac{10^3 a}{h} \vec{r} - \frac{L_0}{2}
 \end{equation}
+where $10^{3}$ converts from Mpc to kpc, $h$ is a parameter that encompasses
+uncertainty in the Hubble constant, and $a$ is a scaling factor using by the
+simulation. $L_0$ is the size of the simulation box. All of these paramters are
+provided in the particle dataset headers.
 
-where $f$ is the conversion function; $\vec{r}$ is the coordinates of the halos; 
-$a$ is the unit conversion coefficient between the raw particle and the halo and 
-$\vec{b}$ is the relative position of the halo coordinates with regard to the particle
-coordinates
+The second step is to process the entire list of particles and filter out those
+particles which are ``close'' to the halo location that we just computed.  We
+use a simple radial cutoff as our metric for ``closeness''. The cutoff we chose
+is the ratio of the virtual halo radius and the radius scale (both parameters
+can be found in the Rockstar halo list). This step is extremely time-consuming,
+because the number of particles is very large.  In principle there should be
+a way to locate a halo's constituent particles more efficiently by using the
+Morton-ordering of the particles themselves. Without this optimization, it is
+difficult to apply our procedure to the largest data set.
 
-Moreover, we roughly define that the particle which is within a certain value from 
-the center of a halo is a belonging particle of that halo. The certain value is chosen as 
-the ratio of the halo radius and the scale radius. In addition, the angular momentum of 
-a particle in its halo is given by the product of the relative position of the particle
-in its halo and the relative linear momentum between the particle and the halo, which 
-are expressed as follows
-
+Next, the angular momentum of each particle in its halo is computing using
+its relative displacement from the halo center and its relative linear
+momentum:
 \begin{equation}
-\vec{L} = (\vec{r_1} - \vec{r_h}) \times (\vec{p_1} - \vec{p_h}}
+\vec{L} = (\vec{r_1} - \vec{r_h}) \times (\vec{p_1} - \vec{p_h})
 \end{equation}
-
 where $\vec{L}$ is the angular momentum of a particle; $\vec{r_1}$ and $\vec{r_h}$ are
 the positions of the particle and the halo, respectively and $\vec{p_1}$ and $\vec{p_h}$ 
 are the linear momentums of the particle and the halo, respectively.
 
-Finally, VTK is used for the visualization of the particles of a specific halo at each 
-time step through volume rendering. The magnitudes of the angular momentums of all the 
-particles in the halo are colored to provide a general insight of how the particles move 
-inside the halo.
+Finally, VTK is used for the visualization of the particles of a specific halo
+at each time step through volume rendering. The magnitudes of the angular
+momentums of all the particles in the halo are colored to provide a general
+insight of how the particles move inside the halo (see Figure
+\ref{fig:halo_particles} for an example).
+
+\begin{figure}[htp]
+\centering
+\includegraphics[width=0.5\columnwidth]{../figures/halo_particles.png}
+\caption{A halo with its constituent particles colored by their angular momenta.}
+\label{fig:halo_particles}
+\end{figure}
 
 \subsection{The evolving of two combined halos}
 
+
+\section{Challenges}
+\label{sec:challenges}
+The provided dataset includes snapshots from the simulation run. These
+snapshots are provided every 40 iterations or so. The greatest challenge that
+we faced in this project was how to visualize an equilibration process which
+takes place at a very fast timescale. Because the process takes place so
+quickly (relative to the time between snapshots), we have very few datapoints
+that are available during the process. We had initially hoped to be able to
+actually animate the halo merger process and directly see the shifting
+distribution of angular momenta as it equilibrated. However, the animations we
+produced were unsatisfactory; the halos jump around a great deal between
+snapshots, and we were unable to observe any gradual mixing.
 
 \section{Results}
 
 \bibliography{writeup.bib}
 \bibliographystyle{plain}
-\nocite{*}
 
 \end{document}
