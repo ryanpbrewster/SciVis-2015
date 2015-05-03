@@ -9,7 +9,7 @@ def dist(r1, r2):
     d = r2-r1
     return np.sqrt(np.dot(d,d))
 
-def glyphActor(pts, sclrs):
+def glyphMapper(pts, sclrs):
     points = vtk.vtkPoints()
     for pt in pts:
         points.InsertNextPoint(pt)
@@ -26,19 +26,27 @@ def glyphActor(pts, sclrs):
     mapper = vtk.vtkDataSetMapper()
     mapper.SetInput(glyph_filter.GetOutput())
     mapper.SetScalarRange(scalars.GetRange())
-    actor = vtk.vtkActor()
-    actor.SetMapper(mapper)
-    return actor
+    return mapper
 
 
-def particleActor(particle_datasets,
-                  target_particle_ids,
-                  halo_center,
-                  halo_velocity):
+class vtkTimerCallback:
+    def __init__(self, actor, mappers):
+        self.t = 0
+        self.actor = actor
+        self.mappers = mappers
+    def execute(self, obj, event):
+        print("Executing callback timer: %d" % self.t)
+        self.t = (self.t + 1) % len(self.mappers)
+        self.actor.SetMapper(self.mappers[self.t])
+        obj.GetRenderWindow().Render()
 
+def visualizeDatasets(particle_datasets,
+                      target_particle_ids,
+                      halo_center,
+                      halo_velocity):
     positions = []
     momenta = []
-    actors = []
+    mappers = []
     for pds in particle_datasets:
         print("Starting a new dataset")
         px, py, pz    = pds['x'],  pds['y'],  pds['z']
@@ -53,16 +61,34 @@ def particleActor(particle_datasets,
         print("Done!")
         positions.append(poss)
         momenta.append(moms)
-        actors.append(glyphActor(poss, moms))
+        mappers.append(glyphMapper(poss, moms))
 
-    return actors[0]
+    actor = vtk.vtkActor()
+    actor.SetMapper(mappers[0])
+
+    ren = vtk.vtkRenderer()
+    ren.AddActor(actor)
+
+    renWin = vtk.vtkRenderWindow()
+    renWin.AddRenderer(ren)
+
+    iren = vtk.vtkRenderWindowInteractor()
+    iren.SetRenderWindow(renWin)
+
+    renWin.Render()
+    iren.Initialize()
+
+    cb = vtkTimerCallback(actor, mappers)
+    iren.AddObserver("TimerEvent", cb.execute)
+    timerId = iren.CreateRepeatingTimer(1000)
+    iren.Start()
 
 def main():
-    particle_dataset_filenames = [ "../data/ds14_scivis_0128_e4_dt04_1.0000"]
-                                 #, "../data/ds14_scivis_0128_e4_dt04_0.9900"
-                                 #, "../data/ds14_scivis_0128_e4_dt04_0.9800"
-                                 #, "../data/ds14_scivis_0128_e4_dt04_0.9700"
-                                 #]
+    particle_dataset_filenames = [ "../data/ds14_scivis_0128_e4_dt04_1.0000"
+                                 , "../data/ds14_scivis_0128_e4_dt04_0.9900"
+                                 , "../data/ds14_scivis_0128_e4_dt04_0.9800"
+                                 , "../data/ds14_scivis_0128_e4_dt04_0.9700"
+                                 ]
     particle_datasets = [ load_sdf(filename) for filename in particle_dataset_filenames ]
 
     scale, id, desc_scale, desc_id, num_prog, pid, upid, desc_pid, phantom, \
@@ -115,15 +141,8 @@ def main():
     myhalo_particles = [ i for i in range(n_particles) if dist(particle_pts[i], myhalo_center) < myhalo_radius ]
     print("Done!")
 
-    ren = vtk.vtkRenderer()
-    ren.AddActor(particleActor(particle_datasets, myhalo_particles, myhalo_center, myhalo_velocity))
+    visualizeDatasets(particle_datasets, myhalo_particles, myhalo_center, myhalo_velocity)
 
-    renWin = vtk.vtkRenderWindow()
-    renWin.AddRenderer(ren)
-
-    iren = vtk.vtkRenderWindowInteractor()
-    iren.SetRenderWindow(renWin)
-    iren.Start()
 
 if __name__ == "__main__":
     main()
