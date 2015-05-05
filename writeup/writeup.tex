@@ -164,11 +164,35 @@ where $\vec{L}$ is the angular momentum of a particle; $\vec{r_1}$ and $\vec{r_h
 the positions of the particle and the halo, respectively and $\vec{p_1}$ and $\vec{p_h}$ 
 are the linear momentums of the particle and the halo, respectively.
 
+Using the angular momenta of each particle that makes up the halo, we can
+generate a histogram of the distribution of angular momenta within the halo.
+Since $\vec{L}$ is a 3-component quantity, it is difficult to quantify as
+a single scalar value. We chose to plot the distribution of $L_h$, the
+component of $\vec{L}$ that lies in the direction of the halo's overall spin
+angular momentum. The equation for this is
+\begin{equation}
+L_h = \frac{\vec{L} \cdot \vec{J_h}}{|\vec{J_h} \cdot \vec{J_h}|^{1/2}}
+\end{equation}
+See Figure \ref{fig:actual_hist} for one such histogram. Note that this
+distribution is characteristic of many halos from the Darksky simulation
+datasets; the vast majority of the particles within a halo have very low
+angular momentum, while the distribution tends to have a long right tail.
+
+\begin{figure}[htp]
+\centering
+\includegraphics[width=0.5\columnwidth]{../figures/actual_angmom_histogram.png}
+\caption{The distribution of $L_h$ within a halo.}
+\label{fig:actual_hist}
+\end{figure}
+
 Finally, VTK is used for the visualization of the particles of a specific halo
 at each time step through volume rendering. The magnitudes of the angular
 momentums of all the particles in the halo are colored to provide a general
-insight of how the particles move inside the halo (see Figure
-\ref{fig:halo_particles} for an example).
+insight of how the particles move inside the halo. Figure
+\ref{fig:halo_particles}, for example, provides some intuition as to why the
+angular momentum distribution is very sharply peaked near $L_h = 0$, namely
+that most of the particles within a halo are very close to its center and
+angular momentum scales with distance from the rotational center.
 
 \begin{figure}[htp]
 \centering
@@ -176,9 +200,6 @@ insight of how the particles move inside the halo (see Figure
 \caption{A halo with its constituent particles colored by their angular momenta.}
 \label{fig:halo_particles}
 \end{figure}
-
-\subsection{The evolving of two combined halos}
-
 
 \section{Challenges}
 \label{sec:challenges}
@@ -193,7 +214,55 @@ distribution of angular momenta as it equilibrated. However, the animations we
 produced were unsatisfactory; the halos jump around a great deal between
 snapshots, and we were unable to observe any gradual mixing.
 
+In an attempt to validate our visualization strategy, we created a scaled-down
+version of the Darksky simulation datasets with much smaller timesteps
+(relative to the timescale of the particle motion). We created these datasets
+using a simple home-rolled $n$-body physics simulator involving collisionless
+particles interacting via an inverse square law. For computational convenience,
+we did not implement periodic boundary conditions. Without periodic boundary
+conditions, the particles will tend to escape to infinity, so we provided an
+unphysical spring-force that kept them tethered near the origin. Because of
+this, our simulation results are entirely non-physical and cannot be compared
+to the Darksky simulations. However, the data we obtained proved very useful in
+validating our visualization pipeline.
+
 \section{Results}
+The main result that we will discuss here was a simulation of the following
+system: two halos were initialized with opposite spins, with an initial
+velocity that would bring them into gradual contact. The overall angular
+momentum distribution of this system can be seen in Figure \ref{fig:init_dist}.
+Once the halos come into contact, we observed an interesting phenomenon: many
+of the particles interacted to ``zero out'' their momentum, but some of the
+particles actually increased their angular momentum greatly. Thus, we see
+a larger peak near $L_h = 0$, but also two peaks very far out. See Figure
+\ref{fig:mid_dist}.  Finally, at very large $t$ we see a much narrower
+distribution of $L_h$, centered around $0$ (see Figure \ref{fig:final_dist}).
+The two halos have indeed equilibrated.
+
+\begin{figure}[htp]
+\centering
+\includegraphics[width=0.5\columnwidth]{../figures/zerosum_mixing_initial_distribution.png}
+\caption{The initial distribution of angular momenta $L_h$ for the entire system.}
+\label{fig:init_dist}
+\end{figure}
+
+\begin{figure}[htp]
+\centering
+\includegraphics[width=0.5\columnwidth]{../figures/zerosum_mixing_midway_distribution.png}
+\caption{The distribution of angular momenta $L_h$ partially through the mixing process.}
+\label{fig:mid_dist}
+\end{figure}
+
+\begin{figure}[htp]
+\centering
+\includegraphics[width=0.5\columnwidth]{../figures/zerosum_mixing_final_distribution.png}
+\caption{The distribution of angular momenta $L_h$ once mixing is complete.}
+\label{fig:final_dist}
+\end{figure}
+
+We also directly animated this equilibration process using the aforementioned
+VTK library. This animation has been provided in an accompanying file:
+\verb@zerosum_mixing.avi@.
 
 \bibliography{writeup.bib}
 \bibliographystyle{plain}
