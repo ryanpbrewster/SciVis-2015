@@ -117,6 +117,18 @@ raw particle datasets and halo catalog and merger tree is provided in Table 1.
 \label{tab:units}
 \end{table}
 
+\section{Challenges}
+\label{sec:challenges}
+The provided dataset includes snapshots from the simulation run. These
+snapshots are provided every 40 iterations or so. The greatest challenge that
+we faced in this project was how to visualize an equilibration process which
+takes place at a very fast timescale. Because the process takes place so
+quickly (relative to the time between snapshots), we have very few datapoints
+that are available during the process. We had initially hoped to be able to
+actually animate the halo merger process and directly see the shifting
+distribution of angular momenta as it equilibrated. However, the animations we
+produced were unsatisfactory; the halos jump around a great deal between
+snapshots, and we were unable to observe any gradual mixing.
 
 \section{Data Analysis}
 The objective of this visualization project is to simulate how two halos evolve with 
@@ -141,7 +153,7 @@ f(\vec{r}) = \frac{10^3 a}{h} \vec{r} - \frac{L_0}{2}
 \end{equation}
 where $10^{3}$ converts from Mpc to kpc, $h$ is a parameter that encompasses
 uncertainty in the Hubble constant, and $a$ is a scaling factor using by the
-simulation. $L_0$ is the size of the simulation box. All of these paramters are
+simulation. $L_0$ is the size of the simulation box. All of these parameters are
 provided in the particle dataset headers.
 
 The second step is to process the entire list of particles and filter out those
@@ -154,7 +166,7 @@ a way to locate a halo's constituent particles more efficiently by using the
 Morton-ordering of the particles themselves. Without this optimization, it is
 difficult to apply our procedure to the largest data set.
 
-Next, the angular momentum of each particle in its halo is computing using
+Next, the angular momentum of each particle in its halo is computed using
 its relative displacement from the halo center and its relative linear
 momentum:
 \begin{equation}
